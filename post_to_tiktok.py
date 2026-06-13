@@ -70,6 +70,7 @@ def post_photo_slideshow(access_token, image_urls):
             "photo_cover_index": 0,
         },
         "media_type": "PHOTO",
+        "post_mode": "DIRECT_POST",
     }
     r = requests.post(
         "https://open.tiktokapis.com/v2/post/publish/content/init/",
