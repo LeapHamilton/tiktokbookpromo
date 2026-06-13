@@ -1,6 +1,7 @@
 import os
 import json
 import requests
+from datetime import date
 
 CLIENT_KEY = os.environ["TIKTOK_CLIENTKEY"]
 CLIENT_SECRET = os.environ["TIKTOK_CLIENT_SECRET"]
@@ -10,7 +11,7 @@ GITHUB_USER = os.environ["GITHUB_USER"]
 GITHUB_REPO = os.environ["GITHUB_REPO"]
 GITHUB_BRANCH = os.environ.get("GITHUB_BRANCH", "main")
 
-CAPTION = "My new book is out now on k1ndle unlimited! 📖 #BookTok #NewRelease"
+CAPTION = "Check out my new book! 📖 #BookTok #NewRelease"
 
 
 def refresh_access_token():
@@ -32,6 +33,11 @@ def get_slideshow_folders():
     return sorted(folders)
 
 
+def get_next_folder(folders):
+    day_number = (date.today() - date(2026, 1, 1)).days
+    return folders[day_number % len(folders)]
+
+
 def get_image_urls(folder):
     url = f"https://api.github.com/repos/{GITHUB_USER}/{GITHUB_REPO}/contents/images/{folder}"
     r = requests.get(url, params={"ref": GITHUB_BRANCH})
@@ -43,26 +49,6 @@ def get_image_urls(folder):
             raw = f"https://raw.githubusercontent.com/{GITHUB_USER}/{GITHUB_REPO}/{GITHUB_BRANCH}/images/{folder}/{f['name']}"
             urls.append(raw)
     return urls
-
-
-def get_next_folder(folders):
-    # Read which folder was last posted
-    try:
-        with open("last_posted.txt", "r") as f:
-            last = f.read().strip()
-    except FileNotFoundError:
-        last = None
-
-    if last not in folders:
-        return folders[0]
-
-    idx = folders.index(last)
-    return folders[(idx + 1) % len(folders)]
-
-
-def save_last_posted(folder):
-    with open("last_posted.txt", "w") as f:
-        f.write(folder)
 
 
 def post_photo_slideshow(access_token, image_urls):
@@ -112,9 +98,11 @@ def main():
     result = post_photo_slideshow(access_token, image_urls)
     print("Result:", json.dumps(result, indent=2))
 
-    save_last_posted(folder)
-    print(f"Done. Next run will post: {folders[(folders.index(folder) + 1) % len(folders)]}")
+    print(f"Done. Posted: {folder}")
 
+
+if __name__ == "__main__":
+    main()
 
 if __name__ == "__main__":
     main()
