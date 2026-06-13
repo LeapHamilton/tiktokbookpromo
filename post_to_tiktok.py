@@ -76,7 +76,7 @@ def post_photo_slideshow(access_token, image_urls):
         headers=headers,
         json=payload,
     )
-       if not r.ok:
+    if not r.ok:
         print("TikTok error response:", r.status_code, r.text)
         r.raise_for_status()
     return r.json()
