@@ -38,20 +38,25 @@ def get_next_folder(folders):
     return folders[day_number % len(folders)]
 
 
-def get_image_urls(folder):
+def download_images(folder):
     url = f"https://api.github.com/repos/{GITHUB_USER}/{GITHUB_REPO}/contents/images/{folder}"
     r = requests.get(url, params={"ref": GITHUB_BRANCH})
     r.raise_for_status()
     files = r.json()
-    urls = []
+    local_paths = []
     for f in sorted(files, key=lambda x: x["name"]):
         if f["name"].lower().endswith((".jpg", ".jpeg", ".png")):
-            raw = f"https://raw.githubusercontent.com/{GITHUB_USER}/{GITHUB_REPO}/{GITHUB_BRANCH}/images/{folder}/{f['name']}"
-            urls.append(raw)
-    return urls
+            raw_url = f"https://raw.githubusercontent.com/{GITHUB_USER}/{GITHUB_REPO}/{GITHUB_BRANCH}/images/{folder}/{f['name']}"
+            img_data = requests.get(raw_url).content
+            local_path = f"/tmp/{f['name']}"
+            with open(local_path, "wb") as img_file:
+                img_file.write(img_data)
+            local_paths.append(local_path)
+            print(f"Downloaded: {f['name']}")
+    return local_paths
 
 
-def post_photo_slideshow(access_token, image_urls):
+def initialize_photo_post(access_token, image_count):
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json; charset=UTF-8",
@@ -65,9 +70,9 @@ def post_photo_slideshow(access_token, image_urls):
             "disable_stitch": False,
         },
         "source_info": {
-            "source": "PULL_FROM_URL",
-            "photo_images": image_urls,
+            "source": "FILE_UPLOAD",
             "photo_cover_index": 0,
+            "photo_images": [{}] * image_count,
         },
         "media_type": "PHOTO",
         "post_mode": "DIRECT_POST",
@@ -83,6 +88,20 @@ def post_photo_slideshow(access_token, image_urls):
     return r.json()
 
 
+def upload_image(upload_url, image_path):
+    with open(image_path, "rb") as f:
+        image_data = f.read()
+    headers = {
+        "Content-Type": "image/jpeg",
+        "Content-Length": str(len(image_data)),
+    }
+    r = requests.put(upload_url, data=image_data, headers=headers)
+    if not r.ok:
+        print("Upload error:", r.status_code, r.text)
+        r.raise_for_status()
+    print(f"Uploaded: {image_path}")
+
+
 def main():
     print("Refreshing access token...")
     access_token = refresh_access_token()
@@ -94,18 +113,20 @@ def main():
     folder = get_next_folder(folders)
     print(f"Posting folder: {folder}")
 
-    image_urls = get_image_urls(folder)
-    print(f"Images: {image_urls}")
+    print("Downloading images...")
+    local_paths = download_images(folder)
+    print(f"Downloaded {len(local_paths)} images")
 
-    print("Posting to TikTok...")
-    result = post_photo_slideshow(access_token, image_urls)
-    print("Result:", json.dumps(result, indent=2))
+    print("Initializing TikTok post...")
+    init_result = initialize_photo_post(access_token, len(local_paths))
+    print("Init result:", json.dumps(init_result, indent=2))
 
-    print(f"Done. Posted: {folder}")
+    upload_urls = init_result["data"]["upload_urls"]
+    for image_path, upload_url in zip(local_paths, upload_urls):
+        upload_image(upload_url, image_path)
 
+    print("Done. Posted folder:", folder)
 
-if __name__ == "__main__":
-    main()
 
 if __name__ == "__main__":
     main()
