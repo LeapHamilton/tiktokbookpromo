@@ -3,7 +3,7 @@ import json
 import requests
 from datetime import date
 
-CLIENT_KEY = os.environ["TIKTOK_CLIENTKEY"]
+CLIENT_KEY = os.environ["TIKTOK_CLIENT_KEY"]
 CLIENT_SECRET = os.environ["TIKTOK_CLIENT_SECRET"]
 REFRESH_TOKEN = os.environ["TIKTOK_REFRESH_TOKEN"]
 
