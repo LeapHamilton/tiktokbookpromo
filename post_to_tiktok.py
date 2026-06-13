@@ -72,7 +72,7 @@ def initialize_photo_post(access_token, image_count):
         "source_info": {
             "source": "FILE_UPLOAD",
             "photo_cover_index": 0,
-            "photo_images": [{}] * image_count,
+            "photo_count": image_count,
         },
         "media_type": "PHOTO",
         "post_mode": "DIRECT_POST",
