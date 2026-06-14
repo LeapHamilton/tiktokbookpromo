@@ -12,7 +12,7 @@ GITHUB_REPO = os.environ["GITHUB_REPO"]
 GITHUB_BRANCH = os.environ.get("GITHUB_BRANCH", "main")
 
 CUSTOM_DOMAIN = "assets.richardjdowling.com"
-CAPTION = Out now on k1ndle unlimited 📖 #BookTok #NewRelease"
+CAPTION = Out now on k1ndle unlimited #BookTok #NewRelease"
 
 
 def refresh_access_token():
