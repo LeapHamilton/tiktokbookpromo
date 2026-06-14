@@ -60,7 +60,7 @@ def post_photo_slideshow(access_token, image_urls):
     payload = {
         "post_info": {
             "title": CAPTION,
-            "privacy_level": "SELF_ONLY",
+            "privacy_level": "PUBLIC_TO_EVERYONE",
             "disable_duet": False,
             "disable_comment": False,
             "disable_stitch": False,
